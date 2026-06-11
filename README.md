@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Горло Мира: Последний Поток</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #1a1410;
+    color: #d4c4a0;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at top, #3a2818 0%, #1a1410 60%, #0a0806 100%);
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(212,196,160,0.02) 0px, rgba(212,196,160,0.02) 1px, transparent 1px, transparent 3px);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .screen {
+    position: fixed;
+    inset: 0;
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    z-index: 2;
+    overflow-y: auto;
+  }
+  .screen.active { display: flex; }
+
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; letter-spacing: 1px; }
+  h1 { font-size: 28px; color: #e8c878; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+  h2 { font-size: 20px; color: #d4a050; margin-bottom: 12px; }
+  h3 { font-size: 16px; color: #c8a878; margin-bottom: 8px; }
+
+  .btn {
+    background: linear-gradient(180deg, #4a3820 0%, #2a1f10 100%);
+    border: 1px solid #6a4f2a;
+    color: #e8c878;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    box-shadow: inset 0 1px 0 rgba(255,200,120,0.1), 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .btn:hover, .btn:active {
+    background: linear-gradient(180deg, #5a4828 0%, #3a2f18 100%);
+    border-color: #8a6f3a;
+    color: #f8d888;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.primary {
+    background: linear-gradient(180deg, #8a5020 0%, #4a2810 100%);
+    border-color: #aa7040;
+  }
+  .btn.danger {
+    background: linear-gradient(180deg, #6a2020 0%, #3a1010 100%);
+    border-color: #8a3030;
+  }
+
+  /* === INTRO === */
+  #intro {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+  }
+  #intro .subtitle {
+    font-style: italic;
+    color: #a08860;
+    margin: 12px 0 24px;
+    font-size: 14px;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+  .engineer-choice {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 420px;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .engineer-card {
+    background: rgba(40, 28, 16, 0.8);
+    border: 1px solid #5a4020;
+    padding: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .engineer-card:hover { border-color: #aa7040; background: rgba(60, 40, 20, 0.9); }
+  .engineer-card .name { color: #e8c878; font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+  .engineer-card .desc { font-size: 13px; color: #b09870; line-height: 1.4; }
+
+  /* === GAME === */
+  #game { padding: 10px; gap: 10px; }
+  .top-bar {
+    background: rgba(20, 14, 8, 0.9);
+    border: 1px solid #4a3520;
+    padding: 10px;
+    border-radius: 2px;
+  }
+  .day-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .day-info .phase {
+    color: #e8c878;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .day-info .level-tag {
+    font-size: 11px;
+    color: #a08860;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .resources {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 6px;
+  }
+  .res {
+    background: rgba(60, 40, 20, 0.4);
+    border: 1px solid #3a2818;
+    padding: 6px 8px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 2px;
+  }
+  .res .icon { font-size: 14px; }
+  .res .val { color: #e8c878; font-weight: bold; }
+  .res.danger .val { color: #d04040; }
+
+  .canyon {
+    flex: 1;
+    background:
+      linear-gradient(180deg, rgba(80, 50, 25, 0.3) 0%, rgba(30, 20, 10, 0.6) 100%);
+    border: 1px solid #4a3520;
+    border-radius: 2px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    position: relative;
+  }
+  .canyon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0px, transparent 30px, rgba(100,70,40,0.05) 30px, rgba(100,70,40,0.05) 31px);
+    pointer-events: none;
+  }
+  .sector {
+    background: rgba(30, 20, 12, 0.85);
+    border: 1px solid #5a4020;
+    padding: 12px;
+    border-radius: 2px;
+    position: relative;
+    z-index: 1;
+  }
+  .sector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sector-name { color: #e8c878; font-weight: bold; font-size: 15px; }
+  .sector-status { font-size: 11px; padding: 2px 8px; border-radius: 2px; }
+  .status-ok { background: #2a4020; color: #80c060; border: 1px solid #4a6030; }
+  .status-warn { background: #4a3820; color: #e8a848; border: 1px solid #6a5030; }
+  .status-bad { background: #4a2020; color: #e06060; border: 1px solid #6a3030; }
+  .sector-desc { font-size: 12px; color: #a08860; margin-bottom: 8px; line-height: 1.4; }
+  .worker-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .worker-ctrl button {
+    width: 28px;
+    height: 28px;
+    background: #3a2818;
+    border: 1px solid #5a4020;
+    color: #e8c878;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .worker-ctrl button:active { background: #5a4020; }
+  .worker-ctrl .count { min-width: 24px; text-align: center; color: #e8c878; font-weight: bold; }
+  .sector-output { font-size: 11px; color: #80a060; margin-top: 6px; }
+
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .action-bar .btn { flex: 1; min-width: 120px; font-size: 13px; padding: 10px; }
+
+  /* === MODAL === */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal {
+    background: linear-gradient(180deg, #2a1f10 0%, #1a1410 100%);
+    border: 1px solid #6a4f2a;
+    max-width: 500px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 2px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  }
+  .modal h2 { border-bottom: 1px solid #4a3520; padding-bottom: 8px; }
+  .modal .text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #c8b890;
+    margin: 12px 0 16px;
+    font-style: italic;
+  }
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice-btn {
+    background: rgba(50, 35, 20, 0.8);
+    border: 1px solid #5a4020;
+    color: #d4c4a0;
+    padding: 10px 14px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.4;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .choice-btn:hover { background: rgba(80, 55, 30, 0.9); border-color: #aa7040; color: #f8d888; }
+  .choice-btn .effect { display: block; font-size: 11px; color: #a08860; margin-top: 4px; }
+
+  /* === LAWS === */
+  .law-item {
+    background: rgba(40, 28, 16, 0.7);
+    border: 1px solid #4a3520;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+  }
+  .law-item.enacted { border-color: #6a8040; background: rgba(50, 70, 30, 0.3); }
+  .law-item .law-name { color: #e8c878; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+  .law-item .law-desc { font-size: 12px; color: #a08860; margin-bottom: 8px; line-height: 1.4; }
+
+  /* === END === */
+  #end {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+  }
+  #end .result {
+    font-size: 16px;
+    color: #c8b890;
+    line-height: 1.7;
+    margin: 20px 0;
+    max-width: 500px;
+  }
+
+  /* Sand particles */
+  .sand {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: rgba(200, 160, 100, 0.4);
+    pointer-events: none;
+    z-index: 0;
+    animation: sandfall linear infinite;
+  }
+  @keyframes sandfall {
+    0% { transform: translate(0, -10px); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translate(-40px, 100vh); opacity: 0; }
+  }
+
+  @media (min-width: 700px) {
+    .engineer-choice { grid-template-columns: 1fr 1fr 1fr; }
+    h1 { font-size: 36px; }
+    .resources { grid-template-columns: repeat(7, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <h1>🌬️ ГОРЛО МИРА</h1>
+  <div class="subtitle">Последний Поток</div>
+  <p style="max-width:500px; line-height:1.6; font-size:14px; color:#a08860;">
+    Год 2142. Солнце выжгло землю. Последнее прохладное место на планете — древнее ущелье, через которое с горных ледников дует ледяной ветер. Ваше поселение «Подкова» задыхается от надвигающейся жары. Паруса рвутся, песок наступает. Вам нужно удержать Поток.
+  </p>
+  <h3 style="margin-top:24px;">Выберите Инженера Ветра:</h3>
+  <div class="engineer-choice">
+    <div class="engineer-card" data-eng="aero">
+      <div class="name">⚙️ Аэродинамик Вара</div>
+      <div class="desc">Ветряные ловушки дешевле на 30%, но рабочие устают быстрее (−1 к здоровью в день).</div>
+    </div>
+    <div class="engineer-card" data-eng="climb">
+      <div class="name">🧗 Альпинист Корв</div>
+      <div class="desc">Рабочие в узких местах не гибнут. Но конструкции хлипкие (−20% к эффективности).</div>
+    </div>
+    <div class="engineer-card" data-eng="weaver">
+      <div class="name">🧵 Ткачиха Селла</div>
+      <div class="desc">Ткань и верёвки служат дольше (+50% к производству). Но их изготовление медленнее.</div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <div class="top-bar">
+    <div class="day-info">
+      <div>
+        <span class="phase" id="phaseLabel">УТРО · День 1</span>
+      </div>
+      <div class="level-tag" id="levelTag">Уровень 1 · Расчистка Горла</div>
+    </div>
+    <div class="resources" id="resources"></div>
+  </div>
+
+  <div class="canyon" id="canyon"></div>
+
+  <div class="action-bar">
+    <button class="btn" id="btnLaws">📜 Законы</button>
+    <button class="btn" id="btnExpedition">🧭 Разведка</button>
+    <button class="btn primary" id="btnNext">▶ Далее</button>
+  </div>
+</div>
+
+<!-- END -->
+<div id="end" class="screen">
+  <h1 id="endTitle">КОНЕЦ</h1>
+  <div class="result" id="endText"></div>
+  <button class="btn primary" onclick="location.reload()">Начать заново</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ============ GAME STATE ============
+const state = {
+  engineer: null,
+  level: 1,
+  day: 1,
+  phase: 'morning', // morning, day, night
+  res: {
+    water: 20,
+    flow: 15,
+    cloth: 15,
+    stone: 10,
+    workers: 8,
+    hope: 60,
+    order: 60
+  },
+  sectors: [],
+  laws: {},
+  eventQueue: [],
+  pendingEvent: null,
+  expeditionActive: false,
+  expeditionReturn: 0,
+  flags: {},
+  deaths: 0,
+  stormsWeathered: 0
+};
+
+// ============ SECTORS ============
+const SECTOR_TEMPLATES = [
+  {
+    id: 'mouth',
+    name: '🌬️ Устье (вход в ущелье)',
+    desc: 'Главный приёмник ветра. Здесь натянуты огромные паруса, направляющие поток вглубь.',
+    baseOutput: { flow: 4, cloth: -1 },
+    workerCap: 4,
+    danger: 0.15
+  },
+  {
+    id: 'condenser',
+    name: '💧 Конденсаторные стены',
+    desc: 'Холодные скальные стены, с которых стекает драгоценная влага.',
+    baseOutput: { water: 3 },
+    workerCap: 3,
+    danger: 0.05
+  },
+  {
+    id: 'quarry',
+    name: '⛏️ Каменоломня в скалах',
+    desc: 'Узкие штольни, где добывают камень для укрепления стен.',
+    baseOutput: { stone: 3 },
+    workerCap: 3,
+    danger: 0.2
+  }
+];
+
+// ============ EVENTS ============
+const EVENTS = [
+  {
+    id: 'refugees',
+    title: '🚶 Беженцы у входа',
+    text: 'К Устью подошла группа из двенадцати измождённых людей. Они умоляют о крове. Но воды и так едва хватает...',
+    choices: [
+      { text: 'Принять всех', effect: '+4 рабочих, −8 воды, +10 надежды', apply: s => { s.res.workers += 4; s.res.water -= 8; s.res.hope += 10; }},
+      { text: 'Принять только детей и стариков', effect: '+2 рабочих, −3 воды', apply: s => { s.res.workers += 2; s.res.water -= 3; }},
+      { text: 'Прогнать — своих не кормим', effect: '−15 надежды, +5 порядка', apply: s => { s.res.hope -= 15; s.res.order += 5; }},
+      { text: 'Отобрать припасы и выгнать', effect: '+6 ткани, +4 камня, −25 надежды', apply: s => { s.res.cloth += 6; s.res.stone += 4; s.res.hope -= 25; s.res.order += 5; }}
+    ]
+  },
+  {
+    id: 'sail_torn',
+    title: '🪢 Порван главный парус',
+    text: 'Резкий порыв ветра разорвал центральный парус в Устье. Поток ослаб. Нужен срочный ремонт.',
+    choices: [
+      { text: 'Бросить все силы на ремонт', effect: '−5 ткани, −2 рабочих на день', apply: s => { s.res.cloth -= 5; s.res.flow -= 2; }},
+      { text: 'Заплатить из аварийного запаса', effect: '−10 воды (на пропитку верёвок)', apply: s => { s.res.water -= 10; }},
+      { text: 'Обойтись заплатками — рискнём', effect: '−2 потока навсегда', apply: s => { s.res.flow -= 2; s.sectors[0].efficiency = (s.sectors[0].efficiency||1) * 0.7; }}
+    ]
+  },
+  {
+    id: 'dust_cough',
+    title: '🤧 Эпидемия Пылевой чахотки',
+    text: 'Трое рабочих начали кашлять кровью. Песок разъедает лёгкие. Болезнь может распространиться.',
+    choices: [
+      { text: 'Карантин и лечение', effect: '−6 воды, −1 рабочий на 3 дня', apply: s => { s.res.water -= 6; s.res.workers = Math.max(1, s.res.workers - 1); s.flags.quarantine = 3; }},
+      { text: 'Раздать пылевые маски', effect: '−8 ткани', apply: s => { s.res.cloth -= 8; }},
+      { text: 'Изолировать больных в нижних штольнях', effect: '−2 рабочих навсегда, −10 надежды', apply: s => { s.res.workers = Math.max(1, s.res.workers - 2); s.res.hope -= 10; }},
+      { text: 'Пусть работают — времени нет', effect: 'Риск: −1−3 рабочих', apply: s => { const d = 1 + Math.floor(Math.random()*3); s.res.workers = Math.max(1, s.res.workers - d); s.deaths += d; }}
+    ]
+  },
+  {
+    id: 'whisper',
+    title: '👂 Шёпот в скалах',
+    text: 'Рабочие в Каменоломне слышат странные звуки из глубины. Одни говорят — древний механизм, другие — духи горы.',
+    choices: [
+      { text: 'Отправить разведчиков вглубь', effect: 'Шанс: находка или обвал', apply: s => {
+        if (Math.random() < 0.5) { s.res.stone += 10; s.res.flow += 3; s.flags.foundDepths = true; }
+        else { s.res.workers = Math.max(1, s.res.workers - 2); s.deaths += 2; s.res.hope -= 10; }
+      }},
+      { text: 'Замуровать проход — не до суеверий', effect: '−5 камня, безопасно', apply: s => { s.res.stone -= 5; }},
+      { text: 'Устроить ритуал слушания', effect: '+15 надежды, −1 день работ', apply: s => { s.res.hope += 15; }}
+    ]
+  },
+  {
+    id: 'sandstorm',
+    title: '🌪️ Песчаная буря!',
+    text: 'С юга надвигается стена песка. Через час она накроет Устье. Нужно срочно решать!',
+    choices: [
+      { text: 'Убрать все паруса и переждать', effect: '−5 потока на день, безопасно', apply: s => { s.res.flow -= 5; }},
+      { text: 'Оставить паруса — рискнуть ради потока', effect: 'Шанс: потеря ткани или бонус', apply: s => {
+        if (Math.random() < 0.4) { s.res.cloth -= 8; s.res.flow -= 3; }
+        else { s.res.flow += 5; s.res.hope += 5; }
+      }},
+      { text: 'Эвакуировать людей вглубь, закрыть Устье щитами', effect: '−6 камня, −4 ткани', apply: s => { s.res.stone -= 6; s.res.cloth -= 4; }}
+    ]
+  },
+  {
+    id: 'old_cache',
+    title: '📦 Старый тайник',
+    text: 'Разведчики нашли полупогребённый фургон с припасами. Но рядом — свежие следы бандитов Пустоши.',
+    choices: [
+      { text: 'Засада и захват', effect: 'Шанс: добыча или потери', apply: s => {
+        if (Math.random() < 0.6) { s.res.cloth += 8; s.res.water += 6; s.res.stone += 4; s.res.order += 5; }
+        else { s.res.workers = Math.max(1, s.res.workers - 2); s.deaths += 2; }
+      }},
+      { text: 'Осторожная ночная вылазка', effect: '+4 ткани, +3 воды, безопасно', apply: s => { s.res.cloth += 4; s.res.water += 3; }},
+      { text: 'Оставить — не лезть в чужие руки', effect: 'Ничего', apply: () => {} }
+    ]
+  },
+  {
+    id: 'bird',
+    title: '🐦 Мёртвая птица у входа',
+    text: 'На пороге Устья нашли мёртвого альбатроса — редкого гостя. Жрецы говорят: это знак гнева Горы. Учёные спорят.',
+    choices: [
+      { text: 'Устроить похоронный ритуал', effect: '+10 надежды, −5 порядка (рабочий день потерян)', apply: s => { s.res.hope += 10; s.res.order -= 5; }},
+      { text: 'Изучить птицу — может, она несла весть', effect: 'Шанс: подсказка', apply: s => { s.flags.birdStudied = true; s.res.hope += 3; }},
+      { text: 'Съесть — мясо есть мясо', effect: '+3 воды, −10 надежды', apply: s => { s.res.water += 3; s.res.hope -= 10; }}
+    ]
+  },
+  {
+    id: 'heat_spike',
+    title: '🔥 Аномальный зной',
+    text: 'Температура снаружи подскочила до +72°C. Поток ослаб — горячий воздух с юга давит на холодный.',
+    choices: [
+      { text: 'Включить аварийные ветряные мехи', effect: '−8 ткани, +4 потока', apply: s => { s.res.cloth -= 8; s.res.flow += 4; }},
+      { text: 'Перераспределить воду на охлаждение', effect: '−10 воды, +3 потока', apply: s => { s.res.water -= 10; s.res.flow += 3; }},
+      { text: 'Объявить "Час Тишины" — все отдыхают', effect: '+8 надежды, −2 потока', apply: s => { s.res.hope += 8; s.res.flow -= 2; }}
+    ]
+  }
+];
+
+// ============ LAWS ============
+const LAWS = [
+  {
+    id: 'dust_masks',
+    name: '🎭 Пылевые маски',
+    desc: 'Обязательные маски для всех рабочих. Снижает смертность от чахотки.',
+    effect: '−1 ткань/день, −50% смертности в событиях',
+    apply: s => { s.flags.masks = true; }
+  },
+  {
+    id: 'children_heights',
+    name: '👶 Дети на высотах',
+    desc: 'Дети работают в самых узких местах, где взрослые не пролезут.',
+    effect: '+2 рабочих, −15 надежды',
+    apply: s => { s.res.workers += 2; s.res.hope -= 15; s.flags.childLabor = true; }
+  },
+  {
+    id: 'wind_ritual',
+    name: '🕯️ Ритуал Ветра',
+    desc: 'Еженедельный день молитв и отдыха в честь Горла.',
+    effect: '+10 надежды/цикл, −1 день работы раз в 5 дней',
+    apply: s => { s.flags.ritual = true; }
+  },
+  {
+    id: 'rationing',
+    name: '🥄 Сухой паёк',
+    desc: 'Жёсткая экономия воды. Люди выживут, но будут страдать.',
+    effect: '−30% расхода воды, −10 надежды',
+    apply: s => { s.flags.rationing = true; s.res.hope -= 10; }
+  },
+  {
+    id: 'imperial_drill',
+    name: '⚔️ Имперская муштра',
+    desc: 'Военная дисциплина. Рабочие работают эффективнее, но надежда падает.',
+    effect: '+25% эффективность, −15 надежды, +15 порядка',
+    apply: s => { s.res.hope -= 15; s.res.order += 15; s.flags.drill = true; }
+  },
+  {
+    id: 'scavenger_guild',
+    name: '🗡️ Гильдия сборщиков',
+    desc: 'Организованная гильдия, отправляющаяся за пределы Ущелья.',
+    effect: 'Разведка даёт +50% ресурсов, −2 рабочих постоянно',
+    apply: s => { s.res.workers = Math.max(1, s.res.workers - 2); s.flags.guild = true; }
+  }
+];
+
+// ============ INIT ============
+function initGame(eng) {
+  state.engineer = eng;
+  state.sectors = SECTOR_TEMPLATES.map(s => ({
+    ...s,
+    workers: 0,
+    efficiency: 1
+  }));
+  // Engineer bonuses
+  if (eng === 'weaver') {
+    state.res.cloth = 20;
+  } else if (eng === 'climb') {
+    state.sectors[2].danger = 0; // quarry safe
+    state.sectors[0].danger = 0;
+  }
+  showScreen('game');
+  render();
+}
+
+// ============ RENDER ============
+function render() {
+  renderResources();
+  renderSectors();
+  renderPhase();
+}
+
+function renderResources() {
+  const r = state.res;
+  const items = [
+    { k: 'water', i: '💧', n: 'Вода' },
+    { k: 'flow', i: '🌬️', n: 'Поток' },
+    { k: 'cloth', i: '🧵', n: 'Ткань' },
+    { k: 'stone', i: '⛏️', n: 'Камень' },
+    { k: 'workers', i: '👥', n: 'Рабочие' },
+    { k: 'hope', i: '✨', n: 'Надежда' },
+    { k: 'order', i: '⚖️', n: 'Порядок' }
+  ];
+  document.getElementById('resources').innerHTML = items.map(it => {
+    const v = Math.round(r[it.k]);
+    const danger = (it.k === 'hope' || it.k === 'order') && v < 25 ? 'danger' :
+                   (it.k !== 'hope' && it.k !== 'order' && v < 5) ? 'danger' : '';
+    return `<div class="res ${danger}"><span>${it.i} ${it.n}</span><span class="val">${v}</span></div>`;
+  }).join('');
+}
+
+function renderSectors() {
+  const canyon = document.getElementById('canyon');
+  canyon.innerHTML = state.sectors.map((s, i) => {
+    const status = s.workers === 0 ? 'Простаивает' :
+                   s.workers >= s.workerCap ? 'Максимум' :
+                   s.workers > 0 ? `Работает (${s.workers}/${s.workerCap})` : '';
+    const statusClass = s.workers === 0 ? 'status-bad' :
+                        s.workers >= s.workerCap ? 'status-warn' : 'status-ok';
+    const output = computeSectorOutput(i);
+    const outputStr = Object.entries(output).map(([k, v]) => {
+      const sign = v > 0 ? '+' : '';
+      const names = { water: '💧', flow: '🌬️', cloth: '🧵', stone: '⛏️' };
+      return `${sign}${v} ${names[k] || k}`;
+    }).join(' · ');
+    return `
+      <div class="sector">
+        <div class="sector-header">
+          <div class="sector-name">${s.name}</div>
+          <div class="sector-status ${statusClass}">${status}</div>
+        </div>
+        <div class="sector-desc">${s.desc}</div>
+        <div class="worker-ctrl">
+          <span>Рабочие:</span>
+          <button onclick="adjustWorkers(${i}, -1)">−</button>
+          <span class="count">${s.workers}</span>
+          <button onclick="adjustWorkers(${i}, 1)">+</button>
+          <span style="color:#808060; font-size:11px;">/ ${s.workerCap} · риск ${Math.round(s.danger*100)}%</span>
+        </div>
+        <div class="sector-output">Выход: ${outputStr || '—'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function computeSectorOutput(idx) {
+  const s = state.sectors[idx];
+  const out = {};
+  let mult = s.workers / Math.max(1, s.workerCap);
+  if (state.engineer === 'aero' && idx === 0) mult *= 1.3;
+  if (state.engineer === 'climb') mult *= 0.8;
+  if (state.flags.drill) mult *= 1.25;
+  mult *= (s.efficiency || 1);
+  for (const [k, v] of Object.entries(s.baseOutput)) {
+    out[k] = Math.round(v * mult);
+  }
+  return out;
+}
+
+function renderPhase() {
+  const phases = { morning: '🌅 УТРО', day: '☀️ ДЕНЬ', night: '🌙 НОЧЬ' };
+  document.getElementById('phaseLabel').textContent = `${phases[state.phase]} · День ${state.day}`;
+  const lvlName = state.level === 1 ? 'Уровень 1 · Расчистка Горла' : 'Уровень 2 · Великая Буря';
+  document.getElementById('levelTag').textContent = lvlName;
+  document.getElementById('btnNext').textContent = state.phase === 'night' ? '▶ Новый день' : '▶ Далее';
+}
+
+// ============ ACTIONS ============
+function adjustWorkers(idx, delta) {
+  const s = state.sectors[idx];
+  const totalAssigned = state.sectors.reduce((a, x) => a + x.workers, 0);
+  const free = state.res.workers - totalAssigned;
+  if (delta > 0 && free <= 0) return;
+  if (delta > 0 && s.workers >= s.workerCap) return;
+  if (delta < 0 && s.workers <= 0) return;
+  s.workers += delta;
+  render();
+}
+
+function nextPhase() {
+  if (state.phase === 'morning') {
+    state.phase = 'day';
+    triggerRandomEvent();
+  } else if (state.phase === 'day') {
+    state.phase = 'night';
+    processNight();
+  } else {
+    state.phase = 'morning';
+    state.day++;
+    checkLevelProgress();
+  }
+  render();
+}
+
+function triggerRandomEvent() {
+  // Pick random event not recently used
+  const available = EVENTS.filter(e => !state.eventQueue.includes(e.id));
+  if (available.length === 0) { state.eventQueue = []; return nextPhase(); }
+  const ev = available[Math.floor(Math.random() * available.length)];
+  state.eventQueue.push(ev.id);
+  state.pendingEvent = ev;
+  showEvent(ev);
+}
+
+function showEvent(ev) {
+  document.getElementById('modalTitle').textContent = ev.title;
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="text">${ev.text}</div>
+    <div class="choices">
+      ${ev.choices.map((c, i) => `
+        <button class="choice-btn" onclick="chooseEvent(${i})">
+          ${c.text}
+          <span class="effect">${c.effect}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('modal').classList.add('active');
+}
+
+function chooseEvent(idx) {
+  const ev = state.pendingEvent;
+  ev.choices[idx].apply(state);
+  document.getElementById('modal').classList.remove('active');
+  state.pendingEvent = null;
+  clampResources();
+  checkGameOver();
+  render();
+}
+
+function processNight() {
+  // Sector outputs
+  let totalOutput = { water: 0, flow: 0, cloth: 0, stone: 0 };
+  state.sectors.forEach((s, i) => {
+    const out = computeSectorOutput(i);
+    for (const [k, v] of Object.entries(out)) totalOutput[k] = (totalOutput[k] || 0) + v;
+  });
+  // Consumption
+  const waterNeed = state.flags.rationing ? 2 : 3;
+  const clothNeed = 1;
+  totalOutput.water -= waterNeed * Math.ceil(state.res.workers / 3);
+  totalOutput.cloth -= clothNeed;
+  // Dust masks law
+  if (state.flags.masks) totalOutput.cloth -= 1;
+
+  for (const [k, v] of Object.entries(totalOutput)) state.res[k] += v;
+
+  // Worker accidents
+  state.sectors.forEach(s => {
+    if (s.workers > 0 && Math.random() < s.danger * s.workers) {
+      if (state.engineer === 'climb' && (s.id === 'quarry' || s.id === 'mouth')) return;
+      if (state.flags.masks && Math.random() < 0.5) return;
+      const dead = 1;
+      s.workers = Math.max(0, s.workers - dead);
+      state.res.workers = Math.max(0, state.res.workers - dead);
+      state.deaths += dead;
+      state.res.hope -= 5;
+    }
+  });
+
+  // Natural decay
+  state.res.hope -= 2;
+  state.res.order -= 1;
+  if (state.res.flow < 5) state.res.hope -= 5;
+  if (state.res.water < 5) state.res.hope -= 5;
+
+  // Ritual bonus
+  if (state.flags.ritual && state.day % 5 === 0) state.res.hope += 10;
+
+  // Expedition return
+  if (state.expeditionActive && state.day >= state.expeditionReturn) {
+    const mult = state.flags.guild ? 1.5 : 1;
+    state.res.water += Math.round(5 * mult);
+    state.res.cloth += Math.round(4 * mult);
+    state.res.stone += Math.round(3 * mult);
+    state.expeditionActive = false;
+    state.res.hope += 5;
+  }
+
+  clampResources();
+  checkGameOver();
+}
+
+function clampResources() {
+  for (const k of Object.keys(state.res)) {
+    if (k === 'hope' || k === 'order') state.res[k] = Math.max(0, Math.min(100, state.res[k]));
+    else state.res[k] = Math.max(0, state.res[k]);
+  }
+}
+
+function checkLevelProgress() {
+  if (state.level === 1 && state.day > 10) {
+    if (state.res.flow >= 15 && state.res.workers >= 5) {
+      state.level = 2;
+      state.day = 1;
+      showModal('🌪️ ВЕЛИКАЯ БУРЯ НАДВИГАЕТСЯ', `
+        <div class="text">Вы расчистили Горло. Поток стабилен. Но на горизонте — стена тьмы. Пустынная Буря, какой не видели старейшины. У вас 15 дней, чтобы подготовиться.</div>
+        <div class="choices">
+          <button class="choice-btn" onclick="closeModal()">Мы готовы</button>
+        </div>
+      `);
+    } else {
+      endGame('Поражение', `Ущелье не выдержало. Поток ослаб, песок поглотил "Подкову". Ваши люди растворились в мареве...<br><br>Прожито дней: ${state.day - 1}<br>Погибших: ${state.deaths}`);
+    }
+  } else if (state.level === 2 && state.day > 15) {
+    // Final choice
+    triggerFinalChoice();
+  }
+}
+
+function triggerFinalChoice() {
+  showModal('🔥 ЗЕНИТ БУРИ', `
+    <div class="text">Буря достигла пика. Ущелье трещит. Паруса рвутся один за другим. У вас есть только один шанс. Что делать?</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="finalChoice('blast')">
+        💥 Взорвать перемычку — расширить проход
+        <span class="effect">Поток усилится, но часть поселения обрушится</span>
+      </button>
+      <button class="choice-btn" onclick="finalChoice('depths')">
+        ⬇️ Уйти в Глубины — запечатать Ущелье
+        <span class="effect">Спасение в подземельях, но без солнца</span>
+      </button>
+      <button class="choice-btn" onclick="finalChoice('exodus')">
+        🚶 Исход — покинуть Ущелье
+        <span class="effect">В Пустошь на поиски нового дома</span>
+      </button>
+    </div>
+  `);
+}
+
+function finalChoice(choice) {
+  closeModal();
+  let title = '', text = '';
+  if (choice === 'blast') {
+    state.res.stone -= 10;
+    if (state.res.workers < 4) {
+      endGame('Обвал', 'Взрыв пошёл не так. Скала обрушилась на "Подкову". Ущелье стало могилой для тех, кто искал в нём спасение.');
+      return;
+    }
+    title = '🌬️ Новое Горло';
+    text = 'Перемычка рухнула. Поток стал втрое сильнее. Буря отступила, не выдержав напора. "Подкова" выстояла. Но половина домов разрушена, а старые паруса больше не годятся. Вы начинаете новую эру — эру широкого потока.';
+    if (state.res.hope > 60) text += '<br><br>✨ Люди поют песни о Варе/Корве/Селле — том, кто не побоялся взорвать саму гору.';
+  } else if (choice === 'depths') {
+    if (state.res.stone < 8) {
+      endGame('Заперты', 'Не хватило камня запечатать вход. Песок хлынул в Ущелье вместе с жарой. Крики стихли быстро.');
+      return;
+    }
+    title = '🕯️ Народ Глубин';
+    text = 'Вход замурован. Вы ушли вниз, к древнему льду, который ещё помнят старейшины. Там, в вечных сумерках, теплится новая жизнь. Солнца вы больше не увидите. Но холод — да. Холод у вас будет всегда.';
+    if (state.flags.foundDepths) text += '<br><br>✨ Вы нашли тот самый древний механизм в скалах. Он всё ещё работает.';
+  } else {
+    if (state.res.water < 15 || state.res.workers < 3) {
+      endGame('Песчаная могила', 'Исход начался плохо. Вода кончилась на третий день. Пустошь забрала почти всех. Горсть выживших бредёт на запад, к морю, которого уже нет...');
+      return;
+    }
+    title = '🌅 Караван Надежды';
+    text = 'Вы ушли. "Подкова" осталась за спиной — пустая, засыпанная песком. Но ваши люди живы. Впереди — мифический Оазис, о котором шепчут старцы. Путь долгий. Но впервые за много лет Hope не падает.';
+    if (state.flags.birdStudied) text += '<br><br>✨ Мёртвая птица указала верное направление — на рассвете караван вышел к зелёной долине.';
+  }
+  endGame(title, text + `<br><br>Прожито дней: ${state.day}<br>Погибших: ${state.deaths}<br>Надежда: ${Math.round(state.res.hope)} · Порядок: ${Math.round(state.res.order)}`);
+}
+
+function checkGameOver() {
+  if (state.res.workers <= 0) {
+    endGame('Последний вздох', 'Погиб последний рабочий. Тишина в Ущелье страшнее любого ветра. Песок медленно засыпает пустые дома.');
+  } else if (state.res.hope <= 0) {
+    endGame('Бунт', 'Люди больше не верят. Толпа с факелами штурмует ваш дом. Вас сбрасывают со скал Устья — прямо в поток, который вы предали.');
+  } else if (state.res.order <= 0) {
+    endGame('Анархия', 'Порядка больше нет. Банды воюют за воду в каждом секторе. Ущелье тонет в крови, пока снаружи воет буря.');
+  } else if (state.res.water <= 0 && state.res.flow <= 0) {
+    endGame('Жажда и Зной', 'Ни воды, ни потока. Люди падают один за другим. Солнце ликует.');
+  }
+}
+
+// ============ LAWS MODAL ============
+function showLaws() {
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="text">Примите закон. Каждый можно принять только один раз.</div>
+    ${LAWS.map(l => {
+      const enacted = state.laws[l.id];
+      return `
+        <div class="law-item ${enacted ? 'enacted' : ''}">
+          <div class="law-name">${l.name} ${enacted ? '✓' : ''}</div>
+          <div class="law-desc">${l.desc}<br><em style="color:#c8a878;">${l.effect}</em></div>
+          ${!enacted ? `<button class="btn" onclick="enactLaw('${l.id}')">Принять</button>` : ''}
+        </div>
+      `;
+    }).join('')}
+    <div style="margin-top:12px;"><button class="btn" onclick="closeModal()">Закрыть</button></div>
+  `;
+  document.getElementById('modalTitle').textContent = '📜 Законы Подковы';
+  document.getElementById('modal').classList.add('active');
+}
+
+function enactLaw(id) {
+  const law = LAWS.find(l => l.id === id);
+  if (!law || state.laws[id]) return;
+  state.laws[id] = true;
+  law.apply(state);
+  clampResources();
+  render();
+  showLaws();
+}
+
+// ============ EXPEDITION ============
+function showExpedition() {
+  if (state.expeditionActive) {
+    showModal('🧭 В пути', `<div class="text">Экспедиция вернётся на день ${state.expeditionReturn}.</div><div class="choices"><button class="choice-btn" onclick="closeModal()">Понятно</button></div>`);
+    return;
+  }
+  if (state.res.workers < 3) {
+    showModal('🧭 Нельзя', `<div class="text">Нужно минимум 3 свободных рабочих (сейчас: ${state.res.workers}).</div><div class="choices"><button class="choice-btn" onclick="closeModal()">Понятно</button></div>`);
+    return;
+  }
+  showModal('🧭 Отправить экспедицию', `
+    <div class="text">Отправить группу в Пустошь? Они вернутся через 3 дня с припасами — если выживут.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="launchExpedition()">
+        🏜️ Идти в Пустошь (−2 рабочих на 3 дня, шанс 70%)
+        <span class="effect">+5 воды, +4 ткани, +3 камня при успехе</span>
+      </button>
+      <button class="choice-btn" onclick="closeModal()">Отмена</button>
+    </div>
+  `);
+}
+
+function launchExpedition() {
+  state.res.workers -= 2;
+  state.expeditionActive = true;
+  state.expeditionReturn = state.day + 3;
+  // Resolve success at return
+  if (Math.random() > 0.7) {
+    // Will fail — but we already applied worker loss. Adjust on return.
+    state.flags.expeditionFail = true;
+  }
+  closeModal();
+  render();
+}
+
+// ============ UTILS ============
+function showModal(title, html) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function endGame(title, text) {
+  document.getElementById('endTitle').textContent = title;
+  document.getElementById('endText').innerHTML = text;
+  showScreen('end');
+}
+
+// ============ SAND PARTICLES ============
+function spawnSand() {
+  for (let i = 0; i < 15; i++) {
+    const s = document.createElement('div');
+    s.className = 'sand';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.animationDuration = (8 + Math.random() * 10) + 's';
+    s.style.animationDelay = (Math.random() * 10) + 's';
+    document.body.appendChild(s);
+  }
+}
+spawnSand();
+
+// ============ EVENT BINDINGS ============
+document.querySelectorAll('.engineer-card').forEach(card => {
+  card.addEventListener('click', () => initGame(card.dataset.eng));
+});
+document.getElementById('btnNext').addEventListener('click', nextPhase);
+document.getElementById('btnLaws').addEventListener('click', showLaws);
+document.getElementById('btnExpedition').addEventListener('click', showExpedition);
+
+// Fix expedition fail on return
+const origProcessNight = processNight;
+processNight = function() {
+  origProcessNight();
+  if (state.expeditionActive && state.day >= state.expeditionReturn) {
+    if (state.flags.expeditionFail) {
+      // Expedition failed — refund nothing, just mark
+      state.flags.expeditionFail = false;
+    }
+  }
+};
+</script>
+</body>
+</html>
